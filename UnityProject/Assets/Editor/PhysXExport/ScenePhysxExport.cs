@@ -193,6 +193,32 @@ namespace UnityPhysXExport
         [DllImport("PxSerialization")]
         static extern void setShapeSimulationFilterData(IntPtr shape, IntPtr data);
 
+
+        // joint
+        [DllImport("PxSerialization")]
+        static extern IntPtr createSphericalJoint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+
+        [DllImport("PxSerialization")]
+        static extern IntPtr createPxFixedJoint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+
+        [DllImport("PxSerialization")]
+        static extern IntPtr createPxRevoluteJoint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+
+        [DllImport("PxSerialization")]
+        static extern IntPtr createPxPrismaticJoint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+
+        [DllImport("PxSerialization")]
+        static extern IntPtr createPxDistanceJoint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+        [DllImport("PxSerialization")]
+        static extern IntPtr createPxD6Joint(IntPtr actor0, IntPtr localFrame0,
+                                                          IntPtr actor1, IntPtr localFrame1);
+
+
         static void SetShapeQueryFilterData(IntPtr shape, PxFilterData data)
         {
             IntPtr dataPtr = Marshal.AllocHGlobal(Marshal.SizeOf(data));
@@ -216,7 +242,7 @@ namespace UnityPhysXExport
             return createMaterial(material.staticFriction, material.dynamicFriction, material.bounciness);
         }
 
-        static IntPtr CreateRigidDynamic(Rigidbody rigidBody)
+        static List<IntPtr> CreateRigidDynamic(Rigidbody rigidBody, IntPtr collection)
         {
             Transform transform = rigidBody.transform;
             PxTransform pxTransform;
@@ -228,10 +254,56 @@ namespace UnityPhysXExport
             IntPtr rigidDynamic = createRigidDynamic(transformPtr, rigidBody.mass, rigidBody.drag, rigidBody.angularDrag, rigidBody.useGravity, rigidBody.isKinematic);
 
             Marshal.FreeHGlobal(transformPtr);
-            return rigidDynamic;
+
+            // extend joint
+            string strJointType = IsHaveJoint(rigidBody.gameObject);
+            if (strJointType != "")
+            {
+                Debug.Log(" current gameobject's name is " + rigidBody.transform.name);
+                foreach (Transform child in rigidBody.transform)
+                {
+                    Debug.Log(" child -- gameobject's name is " + child.name);
+                    if (CanExport(child.gameObject))
+                    {
+                        List<IntPtr> childInfo = ExportRootGameObject(collection, child.gameObject);
+                       
+                        if (strJointType == "UnityEngine.HingeJoint")
+                        {
+                            IntPtr joint = createSphericalJoint(rigidDynamic, transformPtr, childInfo[0], childInfo[1]);
+                            addCollectionObject(collection, joint, 0);
+                        }
+                        else if (strJointType == "UnityEngine.FixedJoint")
+                        {
+                            IntPtr joint = createPxFixedJoint(rigidDynamic, transformPtr, childInfo[0], childInfo[1]);
+                            addCollectionObject(collection, joint, 0);
+                        }
+                        else if (strJointType == "UnityEngine.SpringJoint")
+                        {
+
+                        }
+                        else if (strJointType == "UnityEngine.ConfigurableJoint")
+                        {
+
+                        }
+                        else if (strJointType == "UnityEngine.CharacterJoint")
+                        {
+
+                        }
+
+                    }
+                }
+               
+                
+            }
+
+            List<IntPtr> arr = new List<IntPtr>();
+            arr.Add(rigidDynamic);
+            arr.Add(transformPtr);
+
+            return arr;
         }
 
-        static IntPtr CreateRigidStatic(Transform transform)
+        static List<IntPtr> CreateRigidStatic(Transform transform)
         {
             PxTransform pxTransform;
             pxTransform.p = transform.position;
@@ -242,7 +314,12 @@ namespace UnityPhysXExport
             IntPtr rigidDynamic = createRigidStatic(transformPtr);
 
             Marshal.FreeHGlobal(transformPtr);
-            return rigidDynamic;
+
+            List<IntPtr> arr = new List<IntPtr>();
+            arr.Add(rigidDynamic);
+            arr.Add(transformPtr);
+
+            return arr;
         }
 
         static void SetLocalPose(IntPtr shape, PxTransform pxTransform)
@@ -418,8 +495,8 @@ namespace UnityPhysXExport
 
         static IntPtr CreateHeightField(TerrainCollider terrainCollider)
         {
-            int width = terrainCollider.terrainData.heightmapWidth;
-            int height = terrainCollider.terrainData.heightmapHeight;
+            int width = terrainCollider.terrainData.heightmapResolution;
+            int height = terrainCollider.terrainData.heightmapResolution;
             float[,] rawHeights = terrainCollider.terrainData.GetHeights(0, 0, width, height);
             Int16[] heights = new Int16[width * height];
             for (int x = 0; x < width; ++x)
@@ -544,35 +621,58 @@ namespace UnityPhysXExport
             return shapes;
         }
 
-        static void ExportRootGameObject(IntPtr collection, GameObject go)
+        static List<IntPtr> ExportRootGameObject(IntPtr collection, GameObject go)
         {
+            List<IntPtr> arr = new List<IntPtr>();
             List<IntPtr> shapes = CreatePxShapes(go);
             Rigidbody rigidBody = go.GetComponent<Rigidbody>();
 
             if (shapes.Count == 0 && rigidBody == null)
             {
-                return;
+                return arr;
             }
-
-            IntPtr pxRigidBody = IntPtr.Zero;
+            
             if (rigidBody != null)
             {
-                pxRigidBody = CreateRigidDynamic(rigidBody);
+                arr = CreateRigidDynamic(rigidBody,collection);
 
             }
             else
             {
-                pxRigidBody = CreateRigidStatic(go.transform);
+                arr = CreateRigidStatic(go.transform);
             }
 
-            setName(pxRigidBody, Marshal.StringToHGlobalAnsi(go.name));
+            setName(arr[0], Marshal.StringToHGlobalAnsi(go.name));
 
             foreach (IntPtr shape in shapes)
             {
-                attachShape(pxRigidBody, shape);
+                attachShape(arr[0], shape);
             }
 
-            addCollectionObject(collection, pxRigidBody, 0);
+
+            addCollectionObject(collection, arr[0], 0);
+
+            return arr;
+        }
+
+
+
+        static string IsHaveJoint(GameObject go)
+        {
+            Component[] componentsList = go.GetComponents<Component>();
+
+
+            for (int j = 0; j < componentsList.Length; j++)
+            {
+                Debug.Log(componentsList[j].GetType());
+                string strType = componentsList[j].GetType().ToString();
+                if (strType.Contains("Joint"))
+                {
+                    return strType;
+                }
+               
+            }
+            return "";
         }
 
         public static bool Export(string scenePath, string outputPath)

@@ -67,4 +67,27 @@ PXSERIALIZATION_API void setShapeContactOffset(PxShape* shapePtr, float offset);
 PXSERIALIZATION_API void setShapeQueryFilterData(PxShape* shapePtr, PxFilterData* data);
 
 PXSERIALIZATION_API void setShapeSimulationFilterData(PxShape* shapePtr, PxFilterData* data);
+
+// 球体
+PXSERIALIZATION_API PxSphericalJoint* createSphericalJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1);
+
+// 固定
+PXSERIALIZATION_API PxFixedJoint* createPxFixedJoint(
+                                       PxRigidActor* actor0, const PxTransform* localFrame0,
+                                       PxRigidActor* actor1, const PxTransform* localFrame1);
+// 旋转
+PXSERIALIZATION_API PxRevoluteJoint* createPxRevoluteJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1);
+
+
+// 棱柱
+PXSERIALIZATION_API PxPrismaticJoint* createPxPrismaticJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1);
+
+
+PXSERIALIZATION_API PxDistanceJoint* createPxDistanceJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1);
+
+// D6
+PXSERIALIZATION_API PxD6Joint* createPxD6Joint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1);
+
+
+
 }

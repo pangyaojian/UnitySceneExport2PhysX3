@@ -268,4 +268,49 @@ PXSERIALIZATION_API PxShape* CreateHeightField(const PxI16* heights, PxI32 width
             shapePtr->setSimulationFilterData(*data);
     }
 
+    
+    // 球体
+    PXSERIALIZATION_API PxSphericalJoint* createSphericalJoint(
+                                                                 PxRigidActor* actor0, const PxTransform* localFrame0,
+                                                                 PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+        return PxSphericalJointCreate(*gPhysics,actor0,*localFrame0 ,actor1,*localFrame1);
+    }
+
+    // 固定
+    PXSERIALIZATION_API PxFixedJoint* createPxFixedJoint(
+                                       PxRigidActor* actor0, const PxTransform* localFrame0,
+                                                         PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+        return PxFixedJointCreate(*gPhysics,actor0,*localFrame0 ,actor1,*localFrame1);
+    }
+
+    // 旋转
+    PXSERIALIZATION_API PxRevoluteJoint* createPxRevoluteJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+               
+        return PxRevoluteJointCreate(*gPhysics, actor0, *localFrame0, actor1,*localFrame1);
+    }
+
+
+    // 棱柱
+    PXSERIALIZATION_API PxPrismaticJoint* createPxPrismaticJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+        return PxPrismaticJointCreate(*gPhysics, actor0, *localFrame0, actor1, *localFrame1);
+    }
+
+    // 距离
+    PXSERIALIZATION_API PxDistanceJoint* createPxDistanceJoint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+        return PxDistanceJointCreate(*gPhysics, actor0, *localFrame0, actor1, *localFrame1);
+    }
+
+    // D6
+    PXSERIALIZATION_API PxD6Joint* createPxD6Joint(PxRigidActor* actor0, const PxTransform* localFrame0,PxRigidActor* actor1, const PxTransform* localFrame1)
+    {
+        return PxD6JointCreate(*gPhysics, actor0, *localFrame0, actor1, *localFrame1);
+    }
+
+
+    
 }
